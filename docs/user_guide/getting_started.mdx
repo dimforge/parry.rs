@@ -1,0 +1,78 @@
+---
+id: getting_started
+title: Getting started
+sidebar_label: Getting started
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+**Parry** relies on the official Rust package manager
+[Cargo](https://crates.io) for dependency resolution and compilation. Therefore,
+making **Parry** ready to be used by your project is simply a matter of
+adding a new dependency to your `Cargo.toml` file. You can either use the **parry2d**
+crate for 2D geometry or the **parry3d** crate for 3D geometry. You can even use both
+if you need both 2D and 3D in your application. Note that you will probably
+need **nalgebra** as well because it defines algebraic entities
+(vectors, points, transformation matrices) used by most types of **Parry**.
+Note that **nalgebra** is re-exported by **Parry** under the alias **na** (e.g
+`parry3d::na::Vector3`).
+
+```toml
+[dependencies]
+# Choose the one you need, or both.
+# Replace the * by the latest version.
+parry2d = "*"
+parry3d = "*"
+```
+
+Until **Parry** reaches 1.0, it is strongly recommended to always use its
+latest version, though you might encounter breaking changes from time to time.
+
+## Cargo example
+Here is a complete example of `Cargo.toml` file:
+
+<Tabs
+  groupId="dim"
+  defaultValue="2D"
+  values={[
+    {label: 'Example 2D', value: '2D'},
+    {label: 'Example 3D', value: '3D'},
+  ]}>
+  <TabItem value="2D">
+
+```toml
+[package]
+name    = "example-using-Parry"
+version = "0.0.0"
+authors = [ "You" ]
+
+[dependencies]
+// TODO: replace the * by the latest version number.
+parry2d = "*"
+
+[[bin]]
+name = "example"
+path = "./example.rs"
+```
+
+  </TabItem>
+  <TabItem value="3D">
+
+```toml
+[package]
+name    = "example-using-Parry"
+version = "0.0.0"
+authors = [ "You" ]
+
+[dependencies]
+// TODO: replace the * by the latest version number.
+parry3d = "*"
+
+[[bin]]
+name = "example"
+path = "./example.rs"
+```
+
+  </TabItem>
+</Tabs>
