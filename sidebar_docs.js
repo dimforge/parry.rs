@@ -4,10 +4,10 @@ module.exports = {
     {
       'User Guide': [
         'user_guide/getting_started',
-        // 'user_guide/geometric_representations',
-        // 'user_guide/bounding_volumes',
-        // 'user_guide/geometric_queries',
-        // 'user_guide/mesh_transformation',
+        'user_guide/geometric_representations',
+        'user_guide/bounding_volumes',
+        'user_guide/geometric_queries',
+        'user_guide/mesh_transformation',
       ],
     },
     {
