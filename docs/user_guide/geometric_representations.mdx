@@ -135,10 +135,10 @@ assert!(cuboid.half_extents().z == 3.0);
 The `Cylinder` structure describes a 3D cylinder with $\mathbf{y}$ as its principal axis.
 
 
-| Fields | Description |
-| --       | --       |
-| `.half_height` | The half height of the cylinder. |
-| `.radius` | The radius of the cylinder basis. |
+| Field          | Description                       |
+| --             | --                                |
+| `.half_height` | The half height of the cylinder.  |
+| `.radius`      | The radius of the cylinder basis. |
 
 ```rust
 let cylinder = Cylinder::new(0.5f32, 1.0);
@@ -162,10 +162,10 @@ A cone is defined by the _radius_ of its basis and its _half height_ − the
 half distance between the basis and the apex. It points upward, its principal
 axis is the $\mathbf{y}$ axis, and its apex has coordinates `(0, cone.half_height(), 0)`.
 
-| Fields | Description |
-| --          | --       |
-| `.half_height` | The half height of the cone. |
-| `.radius` | The radius of the cone basis. |
+| Field          | Description                   |
+| --             | --                            |
+| `.half_height` | The half height of the cone.  |
+| `.radius`      | The radius of the cone basis. |
 
 ```rust
 let cone = Cone::new(0.5f32, 0.75);

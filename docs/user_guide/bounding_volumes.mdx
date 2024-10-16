@@ -49,6 +49,8 @@ trait:
 | `.tighten(m)`     | Erodes `self` by a ball of radius `m` in-place.          |
 | `.tightened(m)`   | Returns a copy of `self` eroded by a ball of radius `m`. |
 
+{ /* is "by a ball" a technical term ? */}
+
 The `.loosen(...)` and `.loosened(...)` (resp. `.tighten(...)` and
 `.tightened(...)`) methods allow you to dilate (resp. erode) the bounding
 volume by a given margin. This will effectively make the new bounding volume
@@ -56,14 +58,19 @@ strictly larger (resp. thinner) than the original one if `m` is not zero.  This
 is useful, e.g., to optimize some [broad
 phase](collision_detection_pipeline/#broad-phase) algorithms.
 
-
-Finally, the `HasBoundingVolume` trait which is parameterized by the type of the
-returned bounding volume is implemented by shapes and other entities that can
-construct their own bounding volume given a transformation matrix:
+`Shape` requires the following bounding methods to exist:
 
 | Method               | Description |
 | --                   | --          |
-| `.bounding_volume(m)` | Computes the bounding volume of `self` transformed by `m`. |
+| `.compute_local_aabb()` | Computes the local bounding volume of `self`. |
+| `.compute_local_bounding_sphere()` | Computes the local bounding sphere of `self`. |
+
+`Shape` also implements a default implementation inferred by their local variants:
+
+| Method               | Description |
+| --                   | --          |
+| `.compute_aabb(m)` | Computes the bounding volume of `self` transformed by `m`. |
+| `.compute_bounding_sphere(m)` | Computes the bounding sphere of `self` transformed by `m`. |
 
 
 ## Bounding Sphere
@@ -83,10 +90,10 @@ Bounding spheres support [ray casting](geometric_queries/#ray-casting) and
 
 It is fully defined by its center and its radius:
 
-| Method      | Description                                                    |
-|--           | --                                                             |
-| `.center()` | The bounding sphere center. |
-| `.radius()` | The bounding sphere radius. |
+| Field     | Description                                                    |
+|--         | --                                                             |
+| `.center` | The bounding sphere center. |
+| `.radius` | The bounding sphere radius. |
 
 
 Of course, the bounding sphere implements the `BoundingVolume` trait. The
@@ -99,11 +106,11 @@ following shows the effect of the `.loosen(m)` and `.tighten(m)` methods on it:
 
 </div>
 
-There are three ways to create a bounding sphere. The two main ones are to use
-the usual static method `BoundingSphere::new(center, radius)` or with the
-`bounding_volume::bounding_sphere(g, m)` function, where `g` and `m` are the
-shape and its position (e.g. a transformation matrix). In generic code, you
-might as well use the `HasBoundingVolume` trait.
+There are two ways to create a bounding sphere:
+- Use
+the usual static method `BoundingSphere::new(center, radius)`
+- With the `s.compute_bounding_sphere(m)` function,
+where `s` and `m` are the `Shape` and its position (e.g. a transformation matrix).
 
 The following example computes the bounding spheres of two cuboids,
 merges them together, creates an enlarged version of the second one,
@@ -131,8 +138,8 @@ let cube2_pos = Isometry2::identity(); // Identity transformation.
 /*
  * Compute their bounding spheres.
  */
-let bounding_sphere_cube1 = bounding_volume::bounding_sphere(&cube1, &cube1_pos);
-let bounding_sphere_cube2 = bounding_volume::bounding_sphere(&cube2, &cube2_pos);
+let bounding_sphere_cube1 = cube1.compute_bounding_sphere(&cube1_pos);
+let bounding_sphere_cube2 = cube2.compute_bounding_sphere(&cube2_pos);
 
 // Merge the two spheres.
 let bounding_bounding_sphere = bounding_sphere_cube1.merged(&bounding_sphere_cube2);
@@ -165,8 +172,8 @@ let cube2_pos = Isometry3::identity(); // Identity transformation.
 /*
  * Compute their bounding spheres.
  */
-let bounding_sphere_cube1 = bounding_volume::bounding_sphere(&cube1, &cube1_pos);
-let bounding_sphere_cube2 = bounding_volume::bounding_sphere(&cube2, &cube2_pos);
+let bounding_sphere_cube1 = cube1.compute_bounding_sphere(&cube1_pos);
+let bounding_sphere_cube2 = cube2.compute_bounding_sphere(&cube2_pos);
 
 // Merge the two spheres.
 let bounding_bounding_sphere = bounding_sphere_cube1.merged(&bounding_sphere_cube2);
@@ -201,10 +208,10 @@ Its orientation being fixed at all times, it is completely defined by the
 position of its extremal vertices (the two vertices with extremal values along
 each coordinate axis):
 
-| Method   | Description                                                    |
-|----------|-----------------------------------------------------------------|
-| `.mins()` | The AABB vertex with the smallest coordinates along each axis. |
-| `.maxs()` | The AABB vertex with the greatest coordinates along each axis. |
+| Field   | Description                                                    |
+|---------|----------------------------------------------------------------|
+| `.mins` | The AABB vertex with the smallest coordinates along each axis. |
+| `.maxs` | The AABB vertex with the greatest coordinates along each axis. |
 
 
 Of course, the AABB implements the `BoundingVolume` trait. The following shows
@@ -219,18 +226,20 @@ the effect of the `.loosen(m)` and `.tighten(m)` method on it:
 
 An AABB supports [ray casting](geometric_queries/#ray-casting) and [point queries](geometric_queries/#point-projection) as well.
 
-There are four ways to create an AABB. The main one is to use the usual
-static method `AABB::new(mins, maxs)`. This will fail if one component of
-`mins` is strictly greater than the corresponding component of `maxs`. The
-second one is to use the unsafe constructor `AABB::new_invalid()`. It is unsafe
-because the result AABB is invalid: its `mins` field is set to
-[Bounded::max_value()](https://rust-num.github.io/num/num/trait.Bounded.html) and
-its `maxs` field is set to
-[-Bounded::max_value()](https://rust-num.github.io/num/num/trait.Bounded.html).
-This is useful to initiate the merging of multiple AABB. The third construction
-method is to use the `bounding_volume.aabb(g, m)` function, where `g` and `m`
-are the shape and its position (e.g. a transformation matrix). Finally, generic
-applications may directly call the method from the `HasBoundingVolume` trait.
+There are three ways to create an AABB:
+
+- The main one is to use the usual
+  static method `AABB::new(mins, maxs)`. This will fail if one component of
+  `mins` is strictly greater than the corresponding component of `maxs`.
+- The second one is to use the unsafe constructor `AABB::new_invalid()`. It is unsafe
+  because the result AABB is invalid: its `mins` field is set to 
+  [Bounded::max_value()](https://docs.rs/num-traits/0.2.19/num_traits/bounds/trait.Bounded.html#tymethod.max_value) and
+  its `maxs` field is set to { /* TODO: why isn´t it min_value ? */}
+  [-Bounded::max_value()](https://docs.rs/num-traits/0.2.19/num_traits/bounds/trait.Bounded.html#tymethod.max_value).
+This is useful to initiate the merging of multiple AABB.
+- The third construction
+  method is to use the `s.compute_aabb(m)` function, where `s` and `m`
+  are the shape and its position (e.g. a transformation matrix).
 
 The following example computes the AABB of two balls,
 merges them together, creates an enlarged version of the second one, and
@@ -258,8 +267,8 @@ let ball2_pos = Isometry2::identity(); // Identity matrix.
 /*
  * Compute their axis-aligned bounding boxes.
  */
-let aabb_ball1 = bounding_volume::aabb(&ball1, &ball1_pos);
-let aabb_ball2 = bounding_volume::aabb(&ball2, &ball2_pos);
+let aabb_ball1 = ball1.compute_aabb(&ball1_pos);
+let aabb_ball2 = ball2.compute_aabb(&ball2_pos);
 
 // Merge the two boxes.
 let bounding_aabb = aabb_ball1.merged(&aabb_ball2);
@@ -292,8 +301,8 @@ let ball2_pos = Isometry3::identity(); // Identity matrix.
 /*
  * Compute their axis-aligned bounding boxes.
  */
-let aabb_ball1 = bounding_volume::aabb(&ball1, &ball1_pos);
-let aabb_ball2 = bounding_volume::aabb(&ball2, &ball2_pos);
+let aabb_ball1 = ball1.compute_aabb(&ball1_pos);
+let aabb_ball2 = ball2.compute_aabb(&ball2_pos);
 
 // Merge the two boxes.
 let bounding_aabb = aabb_ball1.merged(&aabb_ball2);

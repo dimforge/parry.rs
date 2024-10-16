@@ -140,11 +140,11 @@ itself:
 The result of a successful ray-cast is given by the `RayIntersection`
 structure:
 
-| Field    | Description                               |
-|--        | --                                        |
-| `toi`    | The _time of impact_ of the ray on the object. |
-| `normal` | The normal (in absolute coordinates) at the intersection point of the shape hit by the ray.  |
-| `uvs`    | If available, the texture coordinates at the intersection point of the shape hit by the ray. If the texture coordinates information is not computable, this is set to `None`. |
+| Field            | Description                               |
+|--                | --                                        |
+| `time_of_impact` | The _time of impact_ of the ray on the object. |
+| `normal`         | The normal (in absolute coordinates) at the intersection point of the shape hit by the ray.  |
+| `feature`        | An index to the shape's _feature_ that was hit: a vertex, an edge or a face. |
 
 Recall that the exact point of intersection may be computed from the
  _time of impact_:
@@ -161,13 +161,15 @@ The `RayCast` trait is implemented by shapes that can be intersected by a ray:
 
 | Method | Description |
 |--      | --          |
-| `.toi_with_ray(m, ray, solid)`                   | Computes the time of impact of the intersection between `ray` and `self` transformed by `m`. |
-| `.toi_and_normal_with_ray(m, ray, solid)`        | Computes the time of impact and normal of the intersection between `ray` and `self` transformed by `m`. |
-| `.toi_and_normal_and_uv_with_ray(m, ray, solid)` | Computes the time of impact , normal, and texture coordinates of the intersection between `ray` and `self` transformed by `m`. |
-| `.intersects_ray(m, ray)`                        | Tests whether `ray` intersects `self` transformed by `m`. |
+| `.cast_ray(m, ray, solid)`                | Computes the time of impact of the intersection between `ray` and `self` transformed by `m`. |
+| `.cast_ray_and_get_normal(m, ray, solid)` | Computes the time of impact and normal of the intersection between `ray` and `self` transformed by `m`. |
+| `.intersects_ray(m, ray)`                 | Tests whether `ray` intersects `self` transformed by `m`. |
+
+Each of these method also have a `max_time_of_impact` parameter,
+which can be used to limit the searching range of the raycast, potentially yielding performance benefits.
 
 If you implement this trait for your own shape, only the second method of this
-list − namely `.toi_and_normal_with_ray(...)` − is required. The other ones are
+list − namely `.cast_ray_and_get_normal(...)` − is required. The other ones are
 automatically inferred (but for optimization purpose you might want to
 specialize them as well).
 
@@ -211,19 +213,19 @@ let ray_miss = Ray::new(Point2::new(2.0, 2.0), Vector2::new(1.0, 1.0));
 
 // Solid cast.
 assert_eq!(
-  cuboid.toi_with_ray(&Isometry2::identity(), &ray_inside, true).unwrap(),
+  cuboid.cast_ray(&Isometry2::identity(), &ray_inside, true, Real::MAX).unwrap(),
   0.0
 );
 
 // Non-solid cast.
 assert_eq!(
-  cuboid.toi_with_ray(&Isometry2::identity(), &ray_inside, false).unwrap(),
+  cuboid.cast_ray(&Isometry2::identity(), &ray_inside, false, Real::MAX).unwrap(),
   2.0
 );
 
 // The other ray does not intersect this shape.
-assert!(cuboid.toi_with_ray(&Isometry2::identity(), &ray_miss, false).is_none());
-assert!(cuboid.toi_with_ray(&Isometry2::identity(), &ray_miss, true).is_none());
+assert!(cuboid.cast_ray(&Isometry2::identity(), &ray_miss, false, Real::MAX).is_none());
+assert!(cuboid.cast_ray(&Isometry2::identity(), &ray_miss, true, Real::MAX).is_none());
 ```
 
   </TabItem>
@@ -235,14 +237,14 @@ let ray_inside = Ray::new(Point3::origin(), Vector3::y());
 let ray_miss = Ray::new(Point3::new(2.0, 2.0, 2.0), Vector3::new(1.0, 1.0, 1.0));
 
 // Solid cast.
-assert!(cuboid.toi_with_ray(&Isometry3::identity(), &ray_inside, true).unwrap() == 0.0);
+assert!(cuboid.cast_ray(&Isometry3::identity(), &ray_inside, true, Real::MAX).unwrap() == 0.0);
 
 // Non-solid cast.
-assert!(cuboid.toi_with_ray(&Isometry3::identity(), &ray_inside, false).unwrap() == 2.0);
+assert!(cuboid.cast_ray(&Isometry3::identity(), &ray_inside, false, Real::MAX).unwrap() == 2.0);
 
 // The other ray does not intersect this shape.
-assert!(cuboid.toi_with_ray(&Isometry3::identity(), &ray_miss, false).is_none());
-assert!(cuboid.toi_with_ray(&Isometry3::identity(), &ray_miss, true).is_none());
+assert!(cuboid.cast_ray(&Isometry3::identity(), &ray_miss, false, Real::MAX).is_none());
+assert!(cuboid.cast_ray(&Isometry3::identity(), &ray_miss, true, Real::MAX).is_none());
 ```
 
   </TabItem>
@@ -256,12 +258,12 @@ defined by free-functions on the `query` module. Those functions will inspect
 the shape representation in order to select the right algorithm for the query.
 To avoid this dynamic dispatch when you already know at compile-time which
 types of shapes are involved, the _internal_ submodules, e.g.,
-`query::distance_internal`, contain functions dedicated to specific shape types
+`query::details`, contain functions dedicated to specific shape types
 or representations.
 
 ### Proximity
 
-The proximity query `query::proximity(m1, g1, m2, g2, margin)` tests if the
+The proximity query `query::closest_points(m1, g1, m2, g2, margin)` tests if the
 shapes `g1` and `g2`, respectively transformed by `m1` and `m2`, are
 intersecting. It will not provide any specific detail regarding the exact
 distance separating them. Its result is described by the `Proximity`
@@ -308,19 +310,20 @@ let ball_pos_intersecting  = Isometry2::new(Vector2::new(1.0, 1.0), na::zero());
 let ball_pos_within_margin = Isometry2::new(Vector2::new(2.0, 2.0), na::zero());
 let ball_pos_disjoint      = Isometry2::new(Vector2::new(3.0, 3.0), na::zero());
 
-let prox_intersecting = query::proximity(&ball_pos_intersecting, &ball,
+let prox_intersecting = query::closest_points(&ball_pos_intersecting, &ball,
                                          &cuboid_pos,            &cuboid,
                                          margin);
-let prox_within_margin = query::proximity(&ball_pos_within_margin, &ball,
+let prox_within_margin = query::closest_points(&ball_pos_within_margin, &ball,
                                           &cuboid_pos,             &cuboid,
                                           margin);
-let prox_disjoint = query::proximity(&ball_pos_disjoint, &ball,
+let prox_disjoint = query::closest_points(&ball_pos_disjoint, &ball,
                                      &cuboid_pos,        &cuboid,
                                      margin);
 
-assert_eq!(prox_intersecting, Proximity::Intersecting);
-assert_eq!(prox_within_margin, Proximity::WithinMargin);
-assert_eq!(prox_disjoint, Proximity::Disjoint);
+assert_eq!(prox_intersecting, ClosestPoints::Intersecting);
+{ /* TODO: The following probably doesn´t work */}
+assert_eq!(prox_within_margin, ClosestPoints::WithinMargin(_,_));
+assert_eq!(prox_disjoint, Proximity::ClosestPoints);
 ```
 
   </TabItem>
@@ -336,19 +339,20 @@ let ball_pos_intersecting  = Isometry3::new(Vector3::new(1.0, 1.0, 1.0), na::zer
 let ball_pos_within_margin = Isometry3::new(Vector3::new(2.0, 2.0, 2.0), na::zero());
 let ball_pos_disjoint      = Isometry3::new(Vector3::new(3.0, 3.0, 3.0), na::zero());
 
-let prox_intersecting = query::proximity(&ball_pos_intersecting, &ball,
+let prox_intersecting = query::closest_points(&ball_pos_intersecting, &ball,
                                          &cuboid_pos,            &cuboid,
                                          margin);
-let prox_within_margin = query::proximity(&ball_pos_within_margin, &ball,
+let prox_within_margin = query::closest_points(&ball_pos_within_margin, &ball,
                                           &cuboid_pos,             &cuboid,
                                           margin);
-let prox_disjoint = query::proximity(&ball_pos_disjoint, &ball,
+let prox_disjoint = query::closest_points(&ball_pos_disjoint, &ball,
                                      &cuboid_pos,        &cuboid,
                                      margin);
 
-assert_eq!(prox_intersecting, Proximity::Intersecting);
-assert_eq!(prox_within_margin, Proximity::WithinMargin);
-assert_eq!(prox_disjoint, Proximity::Disjoint);
+assert_eq!(prox_intersecting, ClosestPoints::Intersecting);
+{ /* TODO: The following probably doesn´t work */}
+assert_eq!(prox_within_margin, ClosestPoints::WithinMargin(_,_));
+assert_eq!(prox_disjoint, ClosestPoints::Disjoint);
 ```
 
   </TabItem>
@@ -418,9 +422,9 @@ Contact determination is the core feature of any collision detection library.
 The function `query::contact(m1, g1, m2, g2, prediction)` will compute one
 pair of closest points between two objects if they are penetrating, touching,
 or separated by a distance smaller than `prediction`. If the shapes are concave
-or in [conforming
+or in { /* TODO: dead link! probably should link to contact-manifolds */} [conforming
 contact](./collision_detection_pipeline/#conforming-contacts), you may need
-multiple contact points instead. This can be achieved by [persistent contact
+multiple contact points instead. This can be achieved by { /* TODO: dead link! */} [persistent contact
 generation](collision_detection_pipeline/#persistent-contact-generation)
 structures. In any cases, a contact is described by the `Contact` structure:
 
@@ -429,11 +433,12 @@ structures. In any cases, a contact is described by the `Contact` structure:
 |--        | --                                                                       |
 | `world1` | The contact point on the first object expressed in the absolute coordinate system. |
 | `world2` | The contact point on the second object expressed in the absolute coordinate system. |
-| `normal` | The contact normal expressed in the absolute coordinate system. Points toward the first object's exterior. |
+| `normal1` | { /* TODO: it's not always in world space... */} The contact normal expressed in the absolute coordinate system. Points toward the first object's exterior. |
+| `normal2` | The contact normal expressed in the absolute coordinate system. Points toward the second object's exterior. If these contact data are expressed in world-space, this normal is equal to -normal1. |
 | `depth`  | The penetration depth of this contact. |
 
 
-Here, _absolute coordinate system_ is the set of axises that are not relative
+Here, _absolute coordinate system_ is the set of axes that are not relative
 to any object. The last `depth` field requires some details. Sometimes, the
 objects in contact are penetrating each other. Notably, if you are using
 **Parry** within the context of physics simulation, penetrations are
@@ -527,14 +532,22 @@ assert_eq!(ctct_too_far, None);
 
 ### Time of impact
 
-The time of impact − aka. $\mathit{toi}$ − returned by `query::time_of_impact(m1,
-v1, g1, m2, v2, g2)` is the time it would take `g1` and `g2` to touch if they
+The time of impact − aka. $\mathit{toi}$ − returned by `query::cast_shapes(m1,
+v1, g1, m2, v2, g2, options)` is the time it would take `g1` and `g2` to touch if they
 both move with linear velocities `v1` and `v2` starting with the positions and
 orientations given by `m1` and `m2`. This is commonly used for, e.g.,
 continuous collision detection to avoid tunnelling effects on physics engines:
 objects that traverse each other in-between iterations if they are moving too
 fast or if the simulation time step is too large.
 
+`options` is a `ShapeCastOption`, it contains several customization options to tweak the function behaviour:
+
+| Field    | Description                                                              |
+|--        | --                                                                       |
+| `max_time_of_impact` | The maximum time-of-impacts that can be computed. Any impact occurring after this time will be ignored. |
+| `target_distance` | The shapes will be considered as impacting as soon as their distance is smaller or equal to this target distance. Must be positive or zero.  |
+| `stop_at_penetration` | If false, the time-of-impact algorithm will automatically discard any impact at time 0 where the velocity is separating. |
+| `compute_impact_geometry_on_penetration` | If true, witness points and normals will be calculated even when the time-of-impact is 0. |
 
 The following example depicts the three possible scenarios:
 
@@ -574,16 +587,18 @@ let box_vel2 = Vector2::new(1.0, 1.0);
 let ball_vel1 = Vector2::new(2.0, 2.0);
 let ball_vel2 = Vector2::new(-0.5, -0.5);
 
-let toi_intersecting = query::time_of_impact(&ball_pos_intersecting, &ball_vel1, &ball,
-                                             &cuboid_pos,            &box_vel1,  &cuboid);
-let toi_will_touch = query::time_of_impact(&ball_pos_will_touch, &ball_vel2, &ball,
-                                           &cuboid_pos,          &box_vel2,  &cuboid);
-let toi_wont_touch = query::time_of_impact(&ball_pos_wont_touch, &ball_vel1, &ball,
-                                           &cuboid_pos,          &box_vel1,  &cuboid);
+let shape_cast_options = ShapeCastOptions::default();
 
-assert_eq!(toi_intersecting, Some(0.0));
-assert!(toi_will_touch.is_some() && toi_will_touch.unwrap() > 0.0);
-assert_eq!(toi_wont_touch, None);
+let result_intersecting = query::cast_shapes(&ball_pos_intersecting, &ball_vel1, &ball,
+                                             &cuboid_pos,            &box_vel1,  &cuboid, shape_cast_options).unwrap();
+let result_will_touch = query::cast_shapes(&ball_pos_will_touch, &ball_vel2, &ball,
+                                           &cuboid_pos,          &box_vel2,  &cuboid, shape_cast_options).unwrap();
+let result_wont_touch = query::cast_shapes(&ball_pos_wont_touch, &ball_vel1, &ball,
+                                           &cuboid_pos,          &box_vel1,  &cuboid, shape_cast_options ).unwrap();
+
+assert_eq!(result_intersecting.unwrap().time_of_impact, Ok(Some(0.0));
+assert!(result_will_touch.unwrap().time_of_impact > 0.0);
+assert_eq!(result_wont_touch, None);
 ```
 
   </TabItem>
@@ -604,16 +619,18 @@ let box_vel2 = Vector3::new(1.0, 1.0, 1.0);
 let ball_vel1 = Vector3::new(2.0, 2.0, 2.0);
 let ball_vel2 = Vector3::new(-0.5, -0.5, -0.5);
 
-let toi_intersecting = query::time_of_impact(&ball_pos_intersecting, &ball_vel1, &ball,
-                                             &cuboid_pos,            &box_vel1,  &cuboid);
-let toi_will_touch = query::time_of_impact(&ball_pos_will_touch, &ball_vel2, &ball,
-                                           &cuboid_pos,          &box_vel2,  &cuboid);
-let toi_wont_touch = query::time_of_impact(&ball_pos_wont_touch, &ball_vel1, &ball,
-                                           &cuboid_pos,          &box_vel1,  &cuboid);
+let shape_cast_options = ShapeCastOptions::default();
 
-assert_eq!(toi_intersecting, Some(0.0));
-assert!(toi_will_touch.is_some() && toi_will_touch.unwrap() > 0.0);
-assert_eq!(toi_wont_touch, None);
+let result_intersecting = query::cast_shapes(&ball_pos_intersecting, &ball_vel1, &ball,
+                                             &cuboid_pos,            &box_vel1,  &cuboid, shape_cast_options).unwrap();
+let result_will_touch = query::cast_shapes(&ball_pos_will_touch, &ball_vel2, &ball,
+                                           &cuboid_pos,          &box_vel2,  &cuboid, shape_cast_options).unwrap();
+let result_wont_touch = query::cast_shapes(&ball_pos_wont_touch, &ball_vel1, &ball,
+                                           &cuboid_pos,          &box_vel1,  &cuboid, shape_cast_options ).unwrap();
+
+assert_eq!(result_intersecting.unwrap().time_of_impact, Ok(Some(0.0));
+assert!(result_will_touch.unwrap().time_of_impact > 0.0);
+assert_eq!(result_wont_touch, None);
 ```
 
   </TabItem>
