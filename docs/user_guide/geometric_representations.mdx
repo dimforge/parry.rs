@@ -14,11 +14,9 @@ convex shapes is too restrictive so **Parry** provides [composite
 shapes](#composite-shapes) that allows the construction of a concave shape from
 its convex parts.
 
-{/* TODO: #composite-shapes link is broken until we figure it out. */}
-
 Geometric primitives supported by **Parry** are defined on the `shape`
 module. They all share a common [dynamic
-representation](#dynamic-shape-representation).  Note that all geometric
+representation](./geometric_representations.mdx#dynamic-shape-representation).  Note that all geometric
 primitives have a predefined constant local frame equal to the identity matrix.
 Thus, one usually has to store a transformation matrix separately from
 the shape itself in order to reach any location and orientation.
@@ -237,7 +235,6 @@ assert!(capsule.radius == 0.75);
 </Tabs>
 
 
-
 -----------
 
 ### Convex hull
@@ -379,7 +376,7 @@ You can call `check_geometry`
 
 </div>
 
-# Composite shapes
+<h1 id="composite-shapes">Composite shapes</h1>
 
 **Parry** supports shapes that are defined as aggregations of others. Every
 composite shape must implement the `SimdCompositeShape` trait which defines methods
@@ -593,10 +590,10 @@ Some shapes do not fall into any of the general categories described above.
 In order to select the right algorithms for geometric queries on specific
 shapes, `Parry` has to be able to distinguish at runtime different shapes
 from their types and they capabilities. As described by [another
-chapter](geometric_queries) of this guide, there are two kinds of geometric
+chapter](./geometric_queries.mdx) of this guide, there are two kinds of geometric
 queries: those that operate on a [single
-shape](geometric_queries/#single-shape-queries) and those that operate on
-[two shapes](geometric_queries/#pairwise-queries) simultaneously.  In the
+shape](./geometric_queries.mdx#single-shape-queries.mdx) and those that operate on
+[two shapes](./geometric_queries.mdx#pairwise-queries) simultaneously.  In the
 first case, runtime algorithm selection is performed with the help of traits
 which can be easily implemented for user-defined shapes and exposed at runtime
 by a `Shape` trait-object. On the other hand, queries involving two shapes
@@ -610,7 +607,7 @@ Elements to inspect shape representation and capabilities are provided for each
 shape by implementing the `Shape` trait. The `ShapeHandle` structure is nothing
 more than a `Shape` trait-object wrapped into an `Arc`.
 
-`Shape` implements `RayCast` and `PointQuery`, see [Geometric queries chapter](geometric_queries) to learn more.
+`Shape` implements `RayCast` and `PointQuery`, see [Geometric queries chapter](./geometric_queries.mdx) to learn more.
 
 | Method                    | Description |
 |--                         | --          |
