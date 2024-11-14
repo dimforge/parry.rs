@@ -77,7 +77,7 @@ let convex_hull = transformation::convex_hull(&points[..]);
 
 ## Approximate convex decomposition
 
-While [convex](geometric_representations#convex) objects
+While [convex](./geometric_representations.mdx #convex) objects
 have nice properties that help designing efficient algorithms, studies show
 that using only convex objects leads to very boring applications! That is why
 **Parry** allows the description of concave objects from its convex parts
@@ -153,7 +153,7 @@ the {/* TODO: v-hacd there ? a bit confusing, would be better to mention "exact"
 ![hacd](/img/hacd.png)
 
 The following example creates a concave object using a
-[path-based](#paths) mesh generation and approximates it
+[path-based](./mesh_transformation.mdx#paths) mesh generation and approximates it
 using the HACD algorithm. Together with
 [kiss3d](https://github.com/sebcrozet/kiss3d), this code was used to generate
 the figure above. { /* TODO: what to do about kiss3d ? */}
