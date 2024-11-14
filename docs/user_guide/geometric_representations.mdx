@@ -379,34 +379,26 @@ You can call `check_geometry`
 
 </div>
 
-{/* Would `SimdCompositeShape` be relevant here? */}
-
-{/*
-
 # Composite shapes
 
 **Parry** supports shapes that are defined as aggregations of others. Every
-composite shape must implement the `CompositeShape` trait which defines methods
+composite shape must implement the `SimdCompositeShape` trait which defines methods
 for accessing their individual parts using indices. The composite shape is assumed to
 be immutable, i.e., an index must always map to a shape and local
 transformation that both remain constant over time. The indices must be contiguous
-and on the range $[0, shape.nparts()[$
+and on the range $[0, shape.qbvh().len()[$
 
 | Method | Description |
 | --          | --        |
-| `.nparts()` | The number of parts on this compound shape. |
 | `.map_part_at(i, f)` | Applies the closure `f` to the `i`-th part and its local transformation matrix. |
-| `.map_transformed_part_at(i, m, f)` | Applies the closure `f` to the `i`-th part and its local transformation matrix with `m` appended to it. |
 | `.aabb_at(i)` | The `AABB` of the `i`-th part of the composite shape. |
-| `.bvt()` | The space-partitioning acceleration structure used by the composite shape. |
+| `.qbvh()` | The space-partitioning acceleration structure used by the composite shape. |
 
 The requirement to use a `BVT` for space-partitioning is extremely restrictive
 and will be replaced by a more flexible system in the future. Currently, three
 composite shapes are available on **Parry**. The `Compound` describes the
 union of any shape supported by **Parry**. The `TriMesh` and the `Polyline`
 are dedicated to assemblies of triangles and segments.
-
-*/}
 
 ### Compound
 The `Compound` structure is the main way of describing concave shapes from
@@ -611,7 +603,7 @@ by a `Shape` trait-object. On the other hand, queries involving two shapes
 require more complex dispatch mechanisms that are not yet customizable by the
 user.
 
-{/* Is it still not customizable? */}
+{/* ^ Is it still not customizable? */}
 
 ### The shared shape trait-object
 Elements to inspect shape representation and capabilities are provided for each
@@ -626,7 +618,7 @@ more than a `Shape` trait-object wrapped into an `Arc`.
 | `.compute_bounding_sphere(m: &Isometry<N>)` | The bounding sphere of the shape transformed by `m`. |
 | `.as_convex_polyhedron()` | Converts `self` to a `ConvexPolyhedron` trait-object. |
 | `.as_support_map()`       | Converts `self` to a `SupportMap` trait-object.      |
-| `.as_composite_shape()`   | Converts `self` to a `CompositeShape` trait-object.   |
+| `.as_composite_shape()`   | Converts `self` to a `SimdCompositeShape` trait-object.   |
 
 All the conversion methods have a default implementation returning `None`.
 This allows you to only partially implement the trait if some of those features
