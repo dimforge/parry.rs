@@ -1,19 +1,21 @@
 const math = require('remark-math')
 const katex = require('rehype-katex')
 
-module.exports = {
+const config = {
   title: 'Parry',
   tagline: '2D and 3D collision-detection library for the Rust programming language.',
   url: 'https://parry.rs',
   baseUrl: '/',
-  onBrokenLinks: 'error', // 'throw',
+  // Not sure why some links are detected are broken,
+  // or why setting `throw` results in a fail compilation where https://github.com/dimforge/nalgebra.rs/pull/88 didn´t.
+  onBrokenLinks: 'warn',
   favicon: 'img/favicon.png',
   organizationName: 'dimforge', // Usually your GitHub org/user name.
   projectName: 'parry', // Usually your repo name.
   themeConfig: {
     prism: {
-        theme: require('prism-react-renderer/themes/github'),
-        additionalLanguages: ['toml', 'rust'],
+      theme: require('prism-react-renderer').themes.github,
+      additionalLanguages: ['toml', 'rust'],
     },
     // announcementBar: {
     //   id: 'supportus',
@@ -42,19 +44,19 @@ module.exports = {
         },
         {
           href: 'https://dimforge.com/blog',
-          label: 'Blog ↪',
+          label: 'Blog',
           position: 'left',
         },
         // {to: 'blog', label: 'Blog', position: 'left'},
         {
-          href: 'https://github.com/sponsors/dimforge',
-          label: 'Donate ♥',
+          value: '<a class="header-button-donate" href="https://github.com/sponsors/dimforge" target="_blank" rel="noopener noreferrer">Donate ♥</a>',
           position: 'right',
-          className: 'header-button-donate'
+          className: "header-button-donate",
+          type: 'html',
         },
         {
           href: 'https://dimforge.com',
-          label: 'Dimforge ↪',
+          label: 'Dimforge',
           position: 'right',
         },
         {
@@ -152,6 +154,8 @@ module.exports = {
     ],
   ],
   stylesheets: [
-      'https://cdn.jsdelivr.net/npm/katex@0.11.0/dist/katex.min.css'
+    'https://cdn.jsdelivr.net/npm/katex@0.11.0/dist/katex.min.css'
   ]
 };
+
+export default config; 
