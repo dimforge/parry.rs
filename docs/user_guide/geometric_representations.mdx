@@ -11,7 +11,7 @@ Different representations of geometric objects will lead to different
 algorithms. Currently, **Parry** relies a lot on convex shapes described by
 a [support mapping](#support-mappings). However, working exclusively with
 convex shapes is too restrictive so **Parry** provides [composite
-shapes](#composite-shapes) that allows the construction of a concave shape from
+shapes](./geometric_representations.mdx#composite-shapes) that allows the construction of a concave shape from
 its convex parts.
 
 Geometric primitives supported by **Parry** are defined on the `shape`
@@ -376,7 +376,7 @@ You can call `check_geometry`
 
 </div>
 
-<h1 id="composite-shapes">Composite shapes</h1>
+## Composite shapes
 
 **Parry** supports shapes that are defined as aggregations of others. Every
 composite shape must implement the `SimdCompositeShape` trait which defines methods
@@ -592,7 +592,7 @@ shapes, `Parry` has to be able to distinguish at runtime different shapes
 from their types and they capabilities. As described by [another
 chapter](./geometric_queries.mdx) of this guide, there are two kinds of geometric
 queries: those that operate on a [single
-shape](./geometric_queries.mdx#single-shape-queries.mdx) and those that operate on
+shape](./geometric_queries.mdx#single-shape-queries) and those that operate on
 [two shapes](./geometric_queries.mdx#pairwise-queries) simultaneously.  In the
 first case, runtime algorithm selection is performed with the help of traits
 which can be easily implemented for user-defined shapes and exposed at runtime
