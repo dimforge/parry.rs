@@ -421,12 +421,8 @@ assert!(relative_eq!(dist_disjoint, 1.0, epsilon = 1.0e-7));
 Contact determination is the core feature of any collision detection library.
 The function `query::contact(m1, g1, m2, g2, prediction)` will compute one
 pair of closest points between two objects if they are penetrating, touching,
-or separated by a distance smaller than `prediction`. If the shapes are concave
-or in { /* TODO: dead link! probably should link to contact-manifolds */} [conforming
-contact](./collision_detection_pipeline.mdx#conforming-contacts), you may need
-multiple contact points instead. This can be achieved by { /* TODO: dead link! */} [persistent contact
-generation](./collision_detection_pipeline.mdx#persistent-contact-generation)
-structures. In any cases, a contact is described by the `Contact` structure:
+or separated by a distance smaller than `prediction`. { /* TODO: contact-manifolds */}
+A contact is described by the `Contact` structure:
 
 
 | Field    | Description                                                              |
