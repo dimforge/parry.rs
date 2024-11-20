@@ -391,7 +391,7 @@ and on the range $[0, shape.qbvh().len()[$
 | `.aabb_at(i)` | The `AABB` of the `i`-th part of the composite shape. |
 | `.qbvh()` | The space-partitioning acceleration structure used by the composite shape. |
 
-The requirement to use a `BVT` for space-partitioning is extremely restrictive
+The requirement to use a `QBVH` for space-partitioning is extremely restrictive
 and will be replaced by a more flexible system in the future. Currently, three
 composite shapes are available on **Parry**. The `Compound` describes the
 union of any shape supported by **Parry**. The `TriMesh` and the `Polyline`
