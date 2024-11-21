@@ -1,7 +1,10 @@
 name: Compare generated user guides
 
+permissions:
+  pull-requests: write
+
 on:
-  pull_request:
+  pull_request_target:
     paths:
       - "docs/user_guide/templates/**" # Only run the workflow if files in this folder are changed
       - "docs-examples/inject_file/src" # Only run the workflow if files in this folder are changed
@@ -14,6 +17,7 @@ jobs:
       - name: Checkout PR branch
         uses: actions/checkout@v3
         with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }} # PR repository
           ref: ${{ github.head_ref }} # PR branch
 
       - name: Generate files for PR branch
@@ -26,7 +30,8 @@ jobs:
       - name: Checkout target branch
         uses: actions/checkout@v3
         with:
-          ref: ${{ github.base_ref }}
+          repository: ${{ github.event.pull_request.base.repo.full_name }} # Upstream repository
+          ref: ${{ github.base_ref }} # Target branch
 
       - name: Generate files for target branch
         run: |
@@ -45,6 +50,7 @@ jobs:
       - name: Post PR comment with comparison results
         uses: actions/github-script@v6
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
             const comparisonResult = fs.readFileSync('comparison_result.diff', 'utf8');
