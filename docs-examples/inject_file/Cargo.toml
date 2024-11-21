@@ -6,5 +6,5 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-# text_inject = { path = "../../../text_inject" }
-text_inject = { git = "https://github.com/Vrixyz/text_inject.git" }
+# strinject = { path = "../../../strinject" }
+strinject = "0.1"
