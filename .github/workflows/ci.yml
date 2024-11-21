@@ -18,3 +18,11 @@ jobs:
         run: corepack enable && yarn
       - name: yarn build
         run: yarn build
+  test-code-snippets-rust:
+    runs-on: ubuntu-latest
+    env:
+      RUSTFLAGS: -D warnings
+    steps:
+      - uses: actions/checkout@v4
+      - name: clippy examples
+        run: cd docs-examples && cargo clippy --examples

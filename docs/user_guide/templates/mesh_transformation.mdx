@@ -43,24 +43,14 @@ convex hull.
   <TabItem value="2D">
 
 ```rust
-let mut points = Vec::new();
-for _ in 0usize..100000 {
-    points.push(rand::random() * 2.0);
-}
-
-let _ = transformation::convex_hull(&points[..]);
+<load path='/2d/rust/examples/mesh_transformation2.rs' marker='convex_hull' />
 ```
 
   </TabItem>
   <TabItem value="3D">
 
 ```rust
-let mut points = Vec::new();
-for _ in range(0u, 100000) {
-    points.push(rand::random() * 2.0f32);
-}
-
-let convex_hull = transformation::convex_hull(&points[..]);
+<load path='/3d/rust/examples/mesh_transformation3.rs' marker='convex_hull' />
 ```
 
   </TabItem>
@@ -77,7 +67,7 @@ let convex_hull = transformation::convex_hull(&points[..]);
 
 ## Approximate convex decomposition
 
-While [convex](geometric_representations#convex) objects
+While [convex](./geometric_representations.mdx #convex) objects
 have nice properties that help designing efficient algorithms, studies show
 that using only convex objects leads to very boring applications! That is why
 **Parry** allows the description of concave objects from its convex parts
@@ -92,27 +82,28 @@ object as the union of two convex parts:
 
 But decomposing manually a concave polyhedra into its convex parts is a very
 tedious task and computing an exact convex decomposition is often not
-necessary. That is why **Parry** implements the 3D
+necessary. That is why **Parry** implements the 3D { /* TODO: it seems to be V-HACD now. (I guess `V` for voxel) */}
 [HACD](https://kmamou.blogspot.fr/2011/10/hacd-hierarchical-approximate-convex.html)
 algorithm that computes an **approximate** convex decomposition. It is not yet
 implemented in 2D.
 
 
-### HACD
+### <abbr title="Hierarchical Approximate Convex Decomposition">HACD</abbr>
 
 The HACD is simply a clustering algorithm based on a concavity criterion to
 separate the different groups. It will group triangles together until the
 directional distances between their vertices and their convex hull do not
 exceed an user-defined limit.
 
-To compute the decomposition of a triangle mesh, use the `procedural::hacd`
-function. It takes three arguments:
+To compute the decomposition of a triangle mesh, use the `transformation::VHACD::decompose`
+function. It takes four arguments:
 
 | Argument         | Description |
 | --               | --          |
-| `mesh`           | The `TriMesh` to decompose. It must have normals. Disconnected components of the mesh will not be merged together. |
-| `error`          | The maximum _normalized concavity_ per cluster. It must **not** be close to a limit value like `Bounded::max_value()`. Values around 0.03 seems to give fine results for most objects. |
-| `min_components` | Force the algorithm not to generate more than `min_components` convex parts. |
+| `params`           | The parameters for the VHACD algorithm execution. |
+| `points`          | The vertex buffer of the polyline (in 2D) or triangle mesh (in 3D). |
+| `indices` | The index buffer of the polyline (in 2D) or triangle mesh (in 3D). |
+| `keep_voxel_to_primitives_map` |  If set to true then a map between the voxels computed during the decomposition, and the primitives (triangle or segment) they intersect will be computed. This is required in order to compute the convex-hulls using the original polyline/trimesh primitives afterwards (otherwise the convex hulls resulting from the convex decomposition will use the voxels vertices). |
 
 Let us define what _normalized concavity_ means. Because there is no official
 definition of the concavity of a 3D object, we are using the maximal distance
@@ -140,54 +131,7 @@ We call the ratio $\frac{d}{D}$ the _normalized concavity_. In this example,
 it is equal to $\frac{6.0}{10.0} = 0.6$.
 
 
-The `procedural::hacd` function returns a tuple. Its first member is the set of
-convex objects that approximate the input mesh and the second one is the set of
-indices of the triangles used to compute each convex object.
+The `transformation::VHACD::decompose` function returns a `VHACD`, which you can use to obtain your convex decomposition:
+- call `.compute_convex_hulls()` to approximate a decomposition of the input mesh { /* TODO: use a table ? + explain the downsampling parameter*/}
+- call `.compute_exact_convex_hulls()` to compute an exact decomposition of the input mesh.
 
-
-The following figure shows a tube (left), the result of the clustering done by
-the HACD algorithm (middle), and the resulting approximate convex decomposition
-(right):
-
-![hacd](/img/hacd.png)
-
-The following example creates a concave object using a
-[path-based](#paths) mesh generation and approximates it
-using the HACD algorithm. Together with
-[kiss3d](https://github.com/sebcrozet/kiss3d), this code was used to generate
-the figure above.
-
-```rust
-let control_points = [
-    Point3::new(0.0f32, 1.0, 0.0),
-    Point3::new(2.0, 4.0, 2.0),
-    Point3::new(2.0, 1.0, 4.0),
-    Point3::new(4.0, 4.0, 6.0),
-    Point3::new(2.0, 1.0, 8.0),
-    Point3::new(2.0, 4.0, 10.0),
-    Point3::new(0.0, 1.0, 12.0),
-    Point3::new(-2.0, 4.0, 10.0),
-    Point3::new(-2.0, 1.0, 8.0),
-    Point3::new(-4.0, 4.0, 6.0),
-    Point3::new(-2.0, 1.0, 4.0),
-    Point3::new(-2.0, 4.0, 2.0),
-];
-let bezier = procedural::bezier_curve(&control_points, 100);
-let mut path = PolylinePath::new(&bezier);
-let pattern = parry2d::procedural::unit_circle(100);
-let mut pattern = PolylinePattern::new(pattern.coords(), true, NoCap::new(), NoCap::new());
-let mut trimesh = pattern.stroke(&mut path);
-
-// The path stroke does not generate normals =(
-// Compute them as they are needed by the HACD.
-trimesh.recompute_normals();
-
-/*
-  * Decomposition of the mesh.
-  */
-let (decomp, partitioning) = transformation::hacd(trimesh.clone(), 0.03, 0);
-
-// We end up with 7 convex parts.
-assert!(decomp.len() == 7);
-assert!(partitioning.len() == 7);
-```
