@@ -1,4 +1,4 @@
-name: nalgebra CI build
+name: parry.rs CI build
 
 on:
   push:
