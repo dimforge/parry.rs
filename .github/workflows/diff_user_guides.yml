@@ -1,0 +1,97 @@
+name: Compare generated user guides
+
+permissions:
+  pull-requests: write
+
+on:
+  pull_request_target:
+    paths:
+      - "docs/user_guide/templates/**" # Only run the workflow if files in this folder are changed
+      - "docs-examples/inject_file/src" # Only run the workflow if files in this folder are changed
+
+jobs:
+  compare-files:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }} # PR repository
+          ref: ${{ github.head_ref }} # PR branch
+
+      - name: Generate files for PR branch
+        run: |
+          ./generate_user_guides.sh || true
+
+      - name: Move PR generated files
+        run: mkdir -p /tmp/pr_generated && mv docs/user_guide/* /tmp/pr_generated/ && mv /tmp/pr_generated/templates docs/user_guide/
+
+      - name: Checkout target branch
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ github.event.pull_request.base.repo.full_name }} # Upstream repository
+          ref: ${{ github.base_ref }} # Target branch
+
+      - name: Generate files for target branch
+        run: |
+          ./generate_user_guides.sh || true
+
+      - name: Move target generated files
+        run: mkdir -p /tmp/target_generated && mv docs/user_guide/* /tmp/target_generated/ && mv /tmp/target_generated/templates docs/user_guide/ ||  true
+
+      # Step 6: Compare files
+      - name: Compare generated files
+        id: compare
+        run: |
+          diff -r /tmp/target_generated/ /tmp/pr_generated/ > comparison_result.diff || true
+
+      # Step 7: Post comparison results as a comment
+      - name: Post PR comment with comparison results
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const comparisonResult = fs.readFileSync('comparison_result.diff', 'utf8');
+
+            // List all comments
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            // Delete previous bot comments
+            for (const comment of comments.data) {
+              if (comment.user.login === 'github-actions[bot]' && comment.body.startsWith('### Comparison Result')) {
+                await github.rest.issues.deleteComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: comment.id,
+                });
+              }
+            }
+
+            // Construct the workflow run link
+            const runLink = `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+
+            // Create the comment body
+            const commentBody = 
+              `### Comparison Result\n\n` +
+              `[View workflow run details](${runLink})` +
+              `<details><summary>Userguide diff introduced by this PR</summary>\n` +
+              `<p>\n\n` +
+              `\`\`\`diff\n` +
+              `${comparisonResult}\n` +
+              `\`\`\`\n\n` ;
+              `</p>\n` +
+              `</details>`;
+
+            // Post new comment
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: commentBody,
+            });
