@@ -6,7 +6,7 @@ permissions:
 on:
   pull_request_target:
     paths:
-      - "docs/user_guide/templates/**" # Only run the workflow if files in this folder are changed
+      - "docs/user_guide/**" # Only run the workflow if files in this folder are changed
       - "docs-examples/inject_file/src" # Only run the workflow if files in this folder are changed
 
 jobs:
