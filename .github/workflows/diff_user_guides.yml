@@ -25,7 +25,7 @@ jobs:
           ./generate_user_guides.sh || true
 
       - name: Move PR generated files
-        run: mkdir -p /tmp/pr_generated && mv docs/user_guide/* /tmp/pr_generated/ && mv /tmp/pr_generated/templates docs/user_guide/
+        run: mkdir -p /tmp/pr_generated && mv docs/user_guide/* /tmp/pr_generated/ && mv /tmp/pr_generated/templates docs/user_guide/ || true
 
       - name: Checkout target branch
         uses: actions/checkout@v3
@@ -38,7 +38,7 @@ jobs:
           ./generate_user_guides.sh || true
 
       - name: Move target generated files
-        run: mkdir -p /tmp/target_generated && mv docs/user_guide/* /tmp/target_generated/ && mv /tmp/target_generated/templates docs/user_guide/ ||  true
+        run: mkdir -p /tmp/target_generated && mv docs/user_guide/* /tmp/target_generated/ && mv /tmp/target_generated/templates docs/user_guide/ || true
 
       # Step 6: Compare files
       - name: Compare generated files
