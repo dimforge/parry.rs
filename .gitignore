@@ -99,3 +99,7 @@ build
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# Ignore these because they are generated automatically from docs/user_guides/templates
+docs/user_guide/
+tmp_*

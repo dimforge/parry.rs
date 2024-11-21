@@ -43,24 +43,14 @@ convex hull.
   <TabItem value="2D">
 
 ```rust
-let mut points = Vec::new();
-for _ in 0usize..100000 {
-    points.push(rand::random() * 2.0);
-}
-
-let _ = transformation::convex_hull(&points[..]);
+<load path='/2d/rust/examples/mesh_transformation2.rs' marker='convex_hull' />
 ```
 
   </TabItem>
   <TabItem value="3D">
 
 ```rust
-let mut points = Vec::new();
-for _ in range(0u, 100000) {
-    points.push(rand::random() * 2.0f32);
-}
-
-let convex_hull = transformation::convex_hull(&points[..]);
+<load path='/3d/rust/examples/mesh_transformation3.rs' marker='convex_hull' />
 ```
 
   </TabItem>
