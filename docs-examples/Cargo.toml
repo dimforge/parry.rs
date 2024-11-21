@@ -1,0 +1,3 @@
+[workspace]
+members = ["2d/rust", "3d/rust", "inject_file"]
+resolver = "2"
