@@ -130,7 +130,7 @@ dependencies = [
 name = "inject_file"
 version = "0.1.0"
 dependencies = [
- "text_inject",
+ "strinject",
 ]
 
 [[package]]
@@ -527,6 +527,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
 
 [[package]]
+name = "strinject"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ba2c97fb0df498965c5d2441fb02178e02839913d4c409eac1d026257b8df66f"
+dependencies = [
+ "regex",
+]
+
+[[package]]
 name = "syn"
 version = "2.0.87"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -535,14 +544,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
-]
-
-[[package]]
-name = "text_inject"
-version = "0.1.0"
-source = "git+https://github.com/Vrixyz/text_inject.git#9b92b289a21b5fd15d9d308677cb712b403f8780"
-dependencies = [
- "regex",
 ]
 
 [[package]]

@@ -1,5 +1,5 @@
 use std::{fs::read_to_string, process::ExitCode};
-use text_inject::*;
+use strinject::*;
 
 fn main() -> ExitCode {
     let args = std::env::args().collect::<Vec<_>>();
