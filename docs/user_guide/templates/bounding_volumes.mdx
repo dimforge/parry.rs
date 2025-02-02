@@ -1,0 +1,213 @@
+---
+id: bounding_volumes
+title: Bounding volumes
+sidebar_label: Bounding volumes
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+Performing some tests on an approximation of the shape of an object is often
+useful to accelerate several geometric queries. For example testing two convex
+polyhedrons for intersection is extremely time-consuming. Instead, we could
+test that their spherical approximations (namely, their [bounding
+spheres](./bounding_volumes.mdx#bounding-sphere)) intersect. Then if the approximations fail this
+test there is no need to perform the same query on the original polyhedra. This
+test-on-the-approximations-first approach is known as _pruning_.
+
+
+The approximations presented here are conservative with regard to the object
+volume, i.e., the approximated shape is completely contained inside of the
+approximating object. Those are called _bounding volumes_. Many bounding
+volumes exist on the literature, depending on their specific uses. For example,
+the following figure shows a 2D polygon bounded by a bounding sphere, an Axis
+Aligned Bounding Box (AABB), an Oriented Bounding Box (OBB), and a convex hull.
+Not all of them are implemented on **Parry** yet:
+
+<div style={{textAlign: 'center'}}>
+
+![bounding volumes](/img/bounding_volumes.svg)
+
+</div>
+
+Note that bounding volumes are very different from regular shapes: their
+positions and orientations are completely encoded in the bounding volume
+structure so they do not require a separate transformation matrix to reach any
+position in space. All bounding volume must implement the `BoundingVolume`
+trait:
+
+
+| Method            | Description |
+|--                 | --          |
+| `.intersects(bv)` | Checks `self` for intersection with `bv`.              |
+| `.contains(bv)`   | Returns `true` if `bv` is completely inside of `self`. |
+| `.merge(bv)`      | Merge `self` and `bv` in-place. |
+| `.merged(bv)`     | Returns a bounding volume, result of the merge of `self` with `bv`. |
+| `.loosen(m)`      | Dilates `self` by a ball of radius `m` in-place.          |
+| `.loosened(m)`    | Returns a copy of `self` dilated by a ball of radius `m`. |
+| `.tighten(m)`     | Erodes `self` by a ball of radius `m` in-place.          |
+| `.tightened(m)`   | Returns a copy of `self` eroded by a ball of radius `m`. |
+
+{ /* is "by a ball" a technical term ? */}
+
+The `.loosen(...)` and `.loosened(...)` (resp. `.tighten(...)` and
+`.tightened(...)`) methods allow you to dilate (resp. erode) the bounding
+volume by a given margin. This will effectively make the new bounding volume
+strictly larger (resp. thinner) than the original one if `m` is not zero.  This
+is useful, e.g., to optimize some broad phase algorithms.
+
+`Shape` requires the following bounding methods to exist:
+
+| Method               | Description |
+| --                   | --          |
+| `.compute_local_aabb()` | Computes the local bounding volume of `self`. |
+| `.compute_local_bounding_sphere()` | Computes the local bounding sphere of `self`. |
+
+`Shape` also implements a default implementation inferred by their local variants:
+
+| Method               | Description |
+| --                   | --          |
+| `.compute_aabb(m)` | Computes the bounding volume of `self` transformed by `m`. |
+| `.compute_bounding_sphere(m)` | Computes the bounding sphere of `self` transformed by `m`. |
+
+
+## Bounding Sphere
+
+The `BoundingSphere` is a sphere that contains completely the bounded shape.
+While this is the less tight bounding volume, it has the benefit of being
+invariant with regard to isometric transformations. Thus, translating and
+rotating the bounded shape will not modify the radius of its bounding sphere.
+Bounding spheres support [ray casting](./geometric_queries.mdx#ray-casting) and
+[point queries](./geometric_queries.mdx#point-projection).
+
+<div style={{textAlign: 'center'}}>
+
+![bounding sphere](/img/bounding_volume_bounding_sphere.svg)
+
+</div>
+
+It is fully defined by its center and its radius:
+
+| Field     | Description                                                    |
+|--         | --                                                             |
+| `.center` | The bounding sphere center. |
+| `.radius` | The bounding sphere radius. |
+
+
+Of course, the bounding sphere implements the `BoundingVolume` trait. The
+following shows the effect of the `.loosen(m)` and `.tighten(m)` methods on it:
+
+<div style={{textAlign: 'center'}}>
+
+![Bounding sphere loosening](/img/bounding_volume_bounding_sphere_loose.svg)
+![Bounding sphere tightening](/img/bounding_volume_bounding_sphere_tight.svg)
+
+</div>
+
+There are two ways to create a bounding sphere:
+- Use
+the usual static method `BoundingSphere::new(center, radius)`
+- With the `s.compute_bounding_sphere(m)` function,
+where `s` and `m` are the `Shape` and its position (e.g. a transformation matrix).
+
+The following example computes the bounding spheres of two cuboids,
+merges them together, creates an enlarged version of the second one,
+and performs some tests.
+
+<Tabs
+  groupId="dim"
+  defaultValue="2D"
+  values={[
+    {label: 'Example 2D', value: '2D'},
+    {label: 'Example 3D', value: '3D'},
+  ]}>
+  <TabItem value="2D">
+
+```rust
+<load path='/2d/rust/examples/bounding_volumes2.rs' marker='Bounding' />
+```
+
+  </TabItem>
+  <TabItem value="3D">
+
+```rust
+<load path='/3d/rust/examples/bounding_volumes3.rs' marker='Bounding' />
+```
+
+  </TabItem>
+</Tabs>
+
+## Axis-Aligned Bounding Box
+
+As suggested by its name, the `AABB` is a box with principal axis aligned with
+the positive coordinate axes $\mathbf{x}$, $\mathbf{y}$, $\mathbf{z}$.
+
+<div style={{textAlign: 'center'}}>
+
+![AABB](/img/bounding_volume_aabb.svg)
+
+</div>
+
+Its orientation being fixed at all times, it is completely defined by the
+position of its extremal vertices (the two vertices with extremal values along
+each coordinate axis):
+
+| Field   | Description                                                    |
+|---------|----------------------------------------------------------------|
+| `.mins` | The AABB vertex with the smallest coordinates along each axis. |
+| `.maxs` | The AABB vertex with the greatest coordinates along each axis. |
+
+
+Of course, the AABB implements the `BoundingVolume` trait. The following shows
+the effect of the `.loosen(m)` and `.tighten(m)` method on it:
+
+<div style={{textAlign: 'center'}}>
+
+![AABB loosening](/img/bounding_volume_aabb_loose.svg)
+![AABB tightening](/img/bounding_volume_aabb_tight.svg)
+
+</div>
+
+An AABB supports [ray casting](./geometric_queries.mdx#ray-casting) and [point queries](./geometric_queries.mdx#point-projection) as well.
+
+There are three ways to create an AABB:
+
+- The main one is to use the usual
+  static method `AABB::new(mins, maxs)`. This will fail if one component of
+  `mins` is strictly greater than the corresponding component of `maxs`.
+- The second one is to use the unsafe constructor `AABB::new_invalid()`. It is unsafe
+  because the result AABB is invalid: its `mins` field is set to 
+  [Bounded::max_value()](https://docs.rs/num-traits/0.2.19/num_traits/bounds/trait.Bounded.html#tymethod.max_value) and
+  its `maxs` field is set to { /* TODO: why isn´t it min_value ? */}
+  [-Bounded::max_value()](https://docs.rs/num-traits/0.2.19/num_traits/bounds/trait.Bounded.html#tymethod.max_value).
+This is useful to initiate the merging of multiple AABB.
+- The third construction
+  method is to use the `s.compute_aabb(m)` function, where `s` and `m`
+  are the shape and its position (e.g. a transformation matrix).
+
+The following example computes the AABB of two balls,
+merges them together, creates an enlarged version of the second one, and
+performs some tests.
+
+<Tabs
+  groupId="dim"
+  defaultValue="2D"
+  values={[
+    {label: 'Example 2D', value: '2D'},
+    {label: 'Example 3D', value: '3D'},
+  ]}>
+  <TabItem value="2D">
+
+```rust
+<load path='/2d/rust/examples/bounding_volumes2.rs' marker='Aabb' />
+```
+
+  </TabItem>
+  <TabItem value="3D">
+
+```rust
+<load path='/3d/rust/examples/bounding_volumes3.rs' marker='Aabb' />
+```
+
+  </TabItem>
+</Tabs>

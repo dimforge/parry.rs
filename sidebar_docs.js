@@ -1,13 +1,21 @@
+let user_guide_root;
+
+if (!process.env.PUBLISH_MODE) {
+  user_guide_root = "user_guide/templates/";
+} else {
+  user_guide_root = "user_guide/";
+}
+
 module.exports = {
   docs: [
     'about_parry',
     {
       'User Guide': [
-        'user_guide/getting_started',
-        // 'user_guide/geometric_representations',
-        // 'user_guide/bounding_volumes',
-        // 'user_guide/geometric_queries',
-        // 'user_guide/mesh_transformation',
+        user_guide_root + 'getting_started',
+        user_guide_root + 'geometric_representations',
+        user_guide_root + 'bounding_volumes',
+        user_guide_root + 'geometric_queries',
+        user_guide_root + 'mesh_transformation',
       ],
     },
     {

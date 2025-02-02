@@ -11,13 +11,12 @@ Different representations of geometric objects will lead to different
 algorithms. Currently, **Parry** relies a lot on convex shapes described by
 a [support mapping](#support-mappings). However, working exclusively with
 convex shapes is too restrictive so **Parry** provides [composite
-shapes](#composite-shapes) that allows the construction of a concave shape from
+shapes](./geometric_representations.mdx#composite-shapes) that allows the construction of a concave shape from
 its convex parts.
-
 
 Geometric primitives supported by **Parry** are defined on the `shape`
 module. They all share a common [dynamic
-representation](#dynamic-shape-representation).  Note that all geometric
+representation](./geometric_representations.mdx#dynamic-shape-representation).  Note that all geometric
 primitives have a predefined constant local frame equal to the identity matrix.
 Thus, one usually has to store a transformation matrix separately from
 the shape itself in order to reach any location and orientation.
@@ -63,13 +62,12 @@ queries on **Parry**.
 The `Ball` designs a disk in 2D, or a sphere in 3D, both centered at the origin.
 
 
-| Method | Description |
+| Field | Description |
 | --          | --       |
-| `.radius()` | The radius of the ball. |
+| `.radius` | The radius of the ball. |
 
 ```rust
-let ball = Ball::new(1.0f32);
-assert!(ball.radius() == 1.0);
+<load path='/2d/rust/examples/geometric_representations2.rs' marker='ball' />
 ```
 
 <div style={{textAlign: 'center'}}>
@@ -86,9 +84,9 @@ The `Cuboid` structure describes a rectangle in two dimensions or a cuboid in
 three dimensions. A cuboid is defined by its _half extents_, i.e., its
 half length along each coordinate axis.
 
-| Method | Description |
+| Field | Description |
 | --          | --       |
-| `.half_extents()` | The half extents of the cuboid. |
+| `.half_extents` | The half extents of the cuboid. |
 
 <Tabs
   groupId="dim"
@@ -100,21 +98,14 @@ half length along each coordinate axis.
   <TabItem value="2D">
 
 ```rust
-let cuboid = Cuboid::new(Vector2::new(2.0f32, 1.0));
-
-assert!(cuboid.half_extents().x == 2.0);
-assert!(cuboid.half_extents().y == 1.0);
+<load path='/2d/rust/examples/geometric_representations2.rs' marker='cuboid' />
 ```
 
   </TabItem>
   <TabItem value="3D">
 
 ```rust
-let cuboid = Cuboid::new(Vector3::new(2.0f32, 1.0, 3.0));
-
-assert!(cuboid.half_extents().x == 2.0);
-assert!(cuboid.half_extents().y == 1.0);
-assert!(cuboid.half_extents().z == 3.0);
+<load path='/3d/rust/examples/geometric_representations3.rs' marker='cuboid' />
 ```
 
   </TabItem>
@@ -134,16 +125,13 @@ assert!(cuboid.half_extents().z == 3.0);
 The `Cylinder` structure describes a 3D cylinder with $\mathbf{y}$ as its principal axis.
 
 
-| Method | Description |
-| --       | --       |
-| `.half_height()` | The half height of the cylinder. |
-| `.radius()` | The radius of the cylinder basis. |
+| Field          | Description                       |
+| --             | --                                |
+| `.half_height` | The half height of the cylinder.  |
+| `.radius`      | The radius of the cylinder basis. |
 
 ```rust
-let cylinder = Cylinder::new(0.5f32, 1.0);
-
-assert!(cylinder.half_height() == 0.5);
-assert!(cylinder.radius() == 1.0);
+<load path='/3d/rust/examples/geometric_representations3.rs' marker='cylinder' />
 ```
 
 <div style={{textAlign: 'center'}}>
@@ -161,16 +149,13 @@ A cone is defined by the _radius_ of its basis and its _half height_ − the
 half distance between the basis and the apex. It points upward, its principal
 axis is the $\mathbf{y}$ axis, and its apex has coordinates `(0, cone.half_height(), 0)`.
 
-| Method | Description |
-| --          | --       |
-| `.half_height()` | The half height of the cone. |
-| `.radius()` | The radius of the cone basis. |
+| Field          | Description                   |
+| --             | --                            |
+| `.half_height` | The half height of the cone.  |
+| `.radius`      | The radius of the cone basis. |
 
 ```rust
-let cone = Cone::new(0.5f32, 0.75);
-
-assert!(cone.half_height() == 0.5);
-assert!(cone.radius() == 0.75);
+<load path='/3d/rust/examples/geometric_representations3.rs' marker='cone' />
 ```
 
 <div style={{textAlign: 'center'}}>
@@ -183,35 +168,61 @@ assert!(cone.radius() == 0.75);
 
 ### Capsule
 The `Capsule` structure describes either a rectangle with extremitis replaced by half-discs (in 2D),
-or a cylinder with extremities replaced by half-balls (in 3D). A capsule is defined by the _half height_
+or a cylinder with extremities replaced by half-balls (in 3D). A capsule is defined by the _endpoints_
 of its rectangular/cylindrical part and the _radius_ of its extremities. It is centered at the origin and
 its principal axis is the $\mathbf{y}$ axis.
 
 | Method | Description |
 | --          | --       |
-| `.half_height()` | The half height of the capsule cylindrical part. |
-| `.radius()` | The radius of the capsule extremities. |
+| `.segment` | The endpoints of the capsule's principal axis. |
+| `.radius` | The radius of the capsule extremities. |
+
+<Tabs
+  groupId="dim"
+  defaultValue="2D"
+  values={[
+    {label: 'Example 2D', value: '2D'},
+    {label: 'Example 3D', value: '3D'},
+  ]}>
+  <TabItem value="2D">
+
+<div style={{textAlign: 'center'}}>
 
 ```rust
-let capsule = Capsule::new(0.5f32, 0.75);
+<load path='/2d/rust/examples/geometric_representations2.rs' marker='capsule' />
+```
 
-assert!(capsule.half_height() == 0.5);
-assert!(capsule.radius() == 0.75);
+![2D capsule](/img/capsule2d.png)
+
+</div>
+
+  </TabItem>
+  <TabItem value="3D">
+
+```rust
+<load path='/3d/rust/examples/geometric_representations3.rs' marker='capsule' />
 ```
 
 <div style={{textAlign: 'center'}}>
 
-![2D capsule](/img/capsule2d.png)
 ![3D capsule](/img/capsule3d.png)
 
 </div>
 
+  </TabItem>
+</Tabs>
+
+
 -----------
 
 ### Convex hull
-The `ConvexPolygon` (in 2D) and `ConvexHull` (in 3D) structures represent the smallest convex envelope of a set of
-point. Remember that an object is said to be convex if it is not self-crossing,
-and if it contains any segment joining two of its points:
+
+A convex hull represents the smallest convex envelope of a set of points.
+
+The `ConvexPolygon` (in 2D) and `ConvexPolyhedron` (in 3D) structures can be used to represent a convex hull.
+
+Remember that an object is said to be convex if it is not self-crossing,
+and if it contains all segments joining two of its points:
 
 <div style={{textAlign: 'center'}}>
 
@@ -219,12 +230,14 @@ and if it contains any segment joining two of its points:
 
 </div>
 
-The `ConvexPolygon` (in 2D) and `ConvexHull` shape (in 3D) are created from a set of points using the `::try_from_points(points)` constructor. Note that this explicitly computes the convex hull of the input point cloud. If you already computed the convex hull on your side, you may use `::try_new(...)` instead (described later in this section).
+The `ConvexPolygon` (in 2D) and `ConvexPolyhedron` shape (in 3D) are created from a set of points using the `::from_convex_hull(points)` constructor.
+Note that this explicitly computes the convex hull of the input point cloud.
+If you already computed the convex hull on your side, you may use `::from_convex_polyline(...)` (in 2D) or `::from_convex_mesh(...)` (in 3D) instead (described later in this section).
 
 
 | Method | Description  |
 | --        | --           |
-| `.points()`  | The points used to create the `ConvexHull` shape. |
+| `.points()`  | The points used to create the `ConvexPolygon` or `ConvexPolyhedron` shape. |
 
 
 <Tabs
@@ -237,34 +250,14 @@ The `ConvexPolygon` (in 2D) and `ConvexHull` shape (in 3D) are created from a se
   <TabItem value="2D">
 
 ```rust
-let points = [
-    Point2::new(-1.0f32, 1.0),
-    Point2::new(-0.5, -0.5),
-    Point2::new(0.0, 0.5),
-    Point2::new(0.5, -0.5),
-    Point2::new(1.0, 1.0),
-];
-
-let convex = ConvexPolygon::try_from_points(&points).expect("Convex hull computation failed.");
-assert!(convex.points().len() == 4); // The convex hull has only 4 vertices.
+<load path='/2d/rust/examples/geometric_representations2.rs' marker='ConvexPolygon' />
 ```
 
   </TabItem>
   <TabItem value="3D">
 
 ```rust
-let points = [
-    Point3::new(0.0f32, 0.0, 1.0),
-    Point3::new(0.0, 0.0, -1.0),
-    Point3::new(0.0, 1.0, 0.0),
-    Point3::new(0.0, -1.0, 0.0),
-    Point3::new(1.0, 0.0, 0.0),
-    Point3::new(-1.0, 0.0, 0.0),
-    Point3::new(0.0, 0.0, 0.0)
-];
-
-let convex = ConvexHull::try_from_points(&points).expect("Convex hull computation failed.");
-assert!(convex.points().len() == 6); // The convex hull has only 6 vertices.
+<load path='/3d/rust/examples/geometric_representations3.rs' marker='ConvexPolyhedron' />
 ```
 
   </TabItem>
@@ -284,50 +277,26 @@ If you have the ability to provide the convex hull directly, you may use `::try_
   <TabItem value="2D">
 
 ```rust
-let points = vec![
-    Point2::new(-1.0f32, 1.0),
-    Point2::new(-0.5, -0.5),
-    Point2::new(0.5, -0.5),
-    Point2::new(1.0, 1.0),
-];
-
-let convex = ConvexPolygon::try_new(points).expect("Invalid convex polygon.");
-assert!(convex.points().len() == 4);
+<load path='/2d/rust/examples/geometric_representations2.rs' marker='ConvexPolyline' />
 ```
 
   </TabItem>
   <TabItem value="3D">
 
 ```rust
-let points = vec![
-    Point3::new(0.0f32, 0.0, 1.0),
-    Point3::new(0.0, 0.0, -1.0),
-    Point3::new(0.0, 1.0, 0.0),
-    Point3::new(0.0, -1.0, 0.0),
-    Point3::new(1.0, 0.0, 0.0),
-    Point3::new(-1.0, 0.0, 0.0),
-];
-
-let indices = vec![
-    0, 4, 2,
-    0, 3, 4,
-    5, 0, 2,
-    5, 3, 0,
-    1, 5, 2,
-    1, 3, 5,
-    4, 1, 2,
-    4, 3, 1,
-];
-
-let convex = ConvexHull::try_new(points, &indices).expect("Invalid convex shape.");
-assert!(convex.points().len() == 6);
+<load path='/3d/rust/examples/geometric_representations3.rs' marker='ConvexMesh' />
 ```
 
   </TabItem>
 </Tabs>
 
 
-Keep in mind that while those constructors will fail if the topology of the convex hull is invalid, or if it contains degenerate faces, it does not check the convexity of the input. Therefore, `::try_new(...)` may succeed even if your input is not actually convex. In that case, you may experience odd results for various geometric queries.
+Keep in mind that while those constructors will fail if the topology of the convex hull is invalid,
+or if it contains degenerate faces, it does not check the convexity of the input.
+Therefore, `::try_new(...)` may succeed even if your input is not actually convex.
+In that case, you may experience odd results for various geometric queries.
+You can call `check_geometry`
+(in 3D) to verify its convexity.
 
 <div style={{textAlign: 'center'}}>
 
@@ -336,24 +305,21 @@ Keep in mind that while those constructors will fail if the topology of the conv
 
 </div>
 
-# Composite shapes
+## Composite shapes
 
 **Parry** supports shapes that are defined as aggregations of others. Every
-composite shape must implement the `CompositeShape` trait which defines methods
+composite shape must implement the `SimdCompositeShape` trait which defines methods
 for accessing their individual parts using indices. The composite shape is assumed to
 be immutable, i.e., an index must always map to a shape and local
 transformation that both remain constant over time. The indices must be contiguous
-and on the range $[0, shape.nparts()[$
+and on the range $[0, shape.qbvh().len()[$
 
 | Method | Description |
 | --          | --        |
-| `.nparts()` | The number of parts on this compound shape. |
 | `.map_part_at(i, f)` | Applies the closure `f` to the `i`-th part and its local transformation matrix. |
-| `.map_transformed_part_at(i, m, f)` | Applies the closure `f` to the `i`-th part and its local transformation matrix with `m` appended to it. |
-| `.aabb_at(i)` | The `AABB` of the `i`-th part of the composite shape. |
-| `.bvt()` | The space-partitioning acceleration structure used by the composite shape. |
+| `.qbvh()` | The space-partitioning acceleration structure used by the composite shape. |
 
-The requirement to use a `BVT` for space-partitioning is extremely restrictive
+The requirement to use a `QBVH` for space-partitioning is extremely restrictive
 and will be replaced by a more flexible system in the future. Currently, three
 composite shapes are available on **Parry**. The `Compound` describes the
 union of any shape supported by **Parry**. The `TriMesh` and the `Polyline`
@@ -366,14 +332,13 @@ convex ones. It is a set of any [shape handle](#dynamic-shape-representation).
 | Method | Description |
 | --          | --        |
 | `.shapes()` | The shapes composing the compound. |
-| `.bounding_volumes()` | The `AABB` of the shapes composing the compound. |
-| `.bvt()` | The space-partitioning acceleration structure used by the compound. |
-
+| `.aabbs()` | The `AABB` of the shapes composing the compound. |
+| `.qbvh()` | The space-partitioning acceleration structure used by the compound. |
 
 Two steps are necessary to create a `Compound`:
 
 1. Initialize a vector of shape handles with their positions and orientations
-   relative to the origin.
+  relative to the origin.
 2. Call `Compound::new` with this vector.
 
 <Tabs
@@ -386,48 +351,14 @@ Two steps are necessary to create a `Compound`:
   <TabItem value="2D">
 
 ```rust
-// Delta transformation matrices.
-let delta1 = Isometry2::new(Vector2::new(0.0f32, -1.5), na::zero());
-let delta2 = Isometry2::new(Vector2::new(-1.5f32, 0.0), na::zero());
-let delta3 = Isometry2::new(Vector2::new(1.5f32,  0.0), na::zero());
-
-// 1) Initialize the shape list.
-let mut shapes = Vec::new();
-let horizontal_box = ShapeHandle::new(Cuboid::new(Vector2::new(1.5f32,  0.25)));
-let vertical_box   = ShapeHandle::new(Cuboid::new(Vector2::new(0.25f32, 1.5)));
-
-shapes.push((delta1, horizontal_box));
-shapes.push((delta2, vertical_box.clone()));
-shapes.push((delta3, vertical_box));
-
-// 2) Create the compound shape.
-let compound = Compound::new(shapes);
-
-assert!(compound.shapes().len() == 3)
+<load path='/2d/rust/examples/geometric_representations2.rs' marker='compound' />
 ```
 
   </TabItem>
   <TabItem value="3D">
 
 ```rust
-// Delta transformation matrices.
-let delta1 = Isometry3::new(Vector3::new(0.0f32, -1.5, 0.0), na::zero());
-let delta2 = Isometry3::new(Vector3::new(-1.5f32, 0.0, 0.0), na::zero());
-let delta3 = Isometry3::new(Vector3::new(1.5f32, 0.0,  0.0), na::zero());
-
-// 1) Initialize the shape list.
-let mut shapes = Vec::new();
-let horizontal_box = ShapeHandle::new(Cuboid::new(Vector3::new(1.5f32,  0.25, 0.25)));
-let vertical_box   = ShapeHandle::new(Cuboid::new(Vector3::new(0.25f32, 1.5, 0.25)));
-
-shapes.push((delta1, horizontal_box));
-shapes.push((delta2, vertical_box.clone()));
-shapes.push((delta3, vertical_box));
-
-// 2) Create the compound shape.
-let compound = Compound::new(shapes);
-
-assert!(compound.shapes().len() == 3)
+<load path='/3d/rust/examples/geometric_representations3.rs' marker='compound' />
 ```
 
   </TabItem>
@@ -452,8 +383,7 @@ to its adjacent elements on this array.
 | Method | Description |
 | --          | --       |
 | `.vertices()` | The vertex buffer. |
-| `.bounding_volumes()` | The bounding volume of each primitive (segment or triangle). |
-| `.bvt()` | The space-partitioning acceleration structure used by the polyline. |
+| `.qbvh()` | The space-partitioning acceleration structure used by the polyline. |
 
 
 <Tabs
@@ -466,36 +396,14 @@ to its adjacent elements on this array.
   <TabItem value="2D">
 
 ```rust
-let points = vec![
-    Point2::new(0.0, 1.0),
-    Point2::new(-1.0, -1.0),
-    Point2::new(0.0, -0.5),
-    Point2::new(1.0, -1.0),
-    Point2::new(0.0, 1.0), // This forms a loop.
-];
-
-// Build the polyline.
-let polyline = Polyline::new(points);
-
-assert!(polyline.vertices().len() == 4);
+<load path='/2d/rust/examples/geometric_representations2.rs' marker='polyline' />
 ```
 
   </TabItem>
   <TabItem value="3D">
 
 ```rust
-let points = vec![
-    Point3::new(0.0, 1.0, 0.0),
-    Point3::new(-1.0, -1.0, 1.0),
-    Point3::new(0.0, -0.5, 0.0),
-    Point3::new(1.0, -1.0, -1.0),
-    Point3::new(0.0, 1.0, 0.0), // This forms a loop.
-];
-
-// Build the polyline.
-let polyline = Polyline::new(points);
-
-assert!(polyline.vertices().len() == 5);
+<load path='/3d/rust/examples/geometric_representations3.rs' marker='polyline' />
 ```
 
   </TabItem>
@@ -518,29 +426,11 @@ those are not used for contact determination but are useful for, e.g., ray-traci
 | --          | --       |
 | `.vertices()` | The vertex buffer. |
 | `.indices()` | The index  buffer of a `TriMesh`.  |
-| `.uvs()` | The texture coordinates buffer. |
-| `.bounding_volumes()` | The bounding volume of each triangle. |
-| `.bvt()` | The space-partitioning acceleration structure used by the mesh. |
+| `.qbvh()` | The space-partitioning acceleration structure used by the mesh. |
 
 
 ```rust
-let points = vec![
-    Point3::new(0.0, 1.0, 0.0),
-    Point3::new(-1.0, -0.5, 0.0),
-    Point3::new(0.0, -0.5, -1.0),
-    Point3::new(1.0, -0.5, 0.0),
-];
-
-let indices = vec![
-    Point3::new(0usize, 1, 2),
-    Point3::new(0, 2, 3),
-    Point3::new(0, 3, 1),
-];
-
-// Build the mesh.
-let mesh = TriMesh::new(points, indices, None);
-
-assert!(mesh.vertices().len() == 4);
+<load path='/3d/rust/examples/geometric_representations3.rs' marker='trimesh' />
 ```
 
 <div style={{textAlign: 'center'}}>
@@ -556,34 +446,32 @@ Some shapes do not fall into any of the general categories described above.
 In order to select the right algorithms for geometric queries on specific
 shapes, `Parry` has to be able to distinguish at runtime different shapes
 from their types and they capabilities. As described by [another
-chapter](geometric_queries) of this guide, there are two kinds of geometric
+chapter](./geometric_queries.mdx) of this guide, there are two kinds of geometric
 queries: those that operate on a [single
-shape](geometric_queries/#single-shape-queries) and those that operate on
-[two shapes](geometric_queries/#pairwise-queries) simultaneously.  In the
+shape](./geometric_queries.mdx#single-shape-queries) and those that operate on
+[two shapes](./geometric_queries.mdx#pairwise-queries) simultaneously.  In the
 first case, runtime algorithm selection is performed with the help of traits
 which can be easily implemented for user-defined shapes and exposed at runtime
 by a `Shape` trait-object. On the other hand, queries involving two shapes
 require more complex dispatch mechanisms that are not yet customizable by the
 user.
 
+{/* ^ Is it still not customizable? */}
+
 ### The shared shape trait-object
 Elements to inspect shape representation and capabilities are provided for each
 shape by implementing the `Shape` trait. The `ShapeHandle` structure is nothing
 more than a `Shape` trait-object wrapped into an `Arc`.
 
+`Shape` implements `RayCast` and `PointQuery`, see [Geometric queries chapter](./geometric_queries.mdx) to learn more.
+
 | Method                    | Description |
 |--                         | --          |
-| `.aabb(m: &Isometry<N>)`            | The AABB of the shape transformed by `m`.            |
-| `.bounding_sphere(m: &Isometry<N>)` | The bounding sphere of the shape transformed by `m`. |
-| `.subshape_transform(i: usize)` | If the shape is composite, the local transform of its `i`-th part. |
-| `.as_ray_cast()`          | Converts `self` to a `RayCast` trait-object.         |
-| `.as_point_query()`       | Converts `self` to a `PointQuery` trait-object.      |
+| `.compute_aabb(m: &Isometry<N>)`            | The AABB of the shape transformed by `m`.            |
+| `.compute_bounding_sphere(m: &Isometry<N>)` | The bounding sphere of the shape transformed by `m`. |
 | `.as_convex_polyhedron()` | Converts `self` to a `ConvexPolyhedron` trait-object. |
 | `.as_support_map()`       | Converts `self` to a `SupportMap` trait-object.      |
-| `.as_composite_shape()`   | Converts `self` to a `CompositeShape` trait-object.   |
-| `.is_support_map()`       | Returns `true` if this shape has a support-mapping.  |
-| `.is_convex_polyhedron()` | Returns `true` if this shape has a `ConvexPolyhedron` representation. |
-| `.is_composite_shape()`   | Returns `true` if this shape is a composite shape.   |
+| `.as_composite_shape()`   | Converts `self` to a `SimdCompositeShape` trait-object.   |
 
 All the conversion methods have a default implementation returning `None`.
 This allows you to only partially implement the trait if some of those features
