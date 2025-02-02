@@ -317,7 +317,6 @@ and on the range $[0, shape.qbvh().len()[$
 | Method | Description |
 | --          | --        |
 | `.map_part_at(i, f)` | Applies the closure `f` to the `i`-th part and its local transformation matrix. |
-| `.aabb_at(i)` | The `AABB` of the `i`-th part of the composite shape. |
 | `.qbvh()` | The space-partitioning acceleration structure used by the composite shape. |
 
 The requirement to use a `QBVH` for space-partitioning is extremely restrictive
